@@ -12,9 +12,9 @@ The purpose of this exercise was to practice the learning from the linear regres
 Use the /states.rds/ data set. Fit a model predicting energy consumed
 per capita (energy) from the percentage of residents living in metropolitan areas (metro).
 
-1. Examine/plot the data before fitting the model
-2. Print and interpret the model `summary'
-3. `plot' the model to look for deviations from modeling assumptions
+### 1. Examine/plot the data before fitting the model
+### 2. Print and interpret the model `summary'
+### 3. `plot' the model to look for deviations from modeling assumptions
 
 ```{r}
 library(readr)
@@ -44,7 +44,7 @@ Plotting the residuals shows a normally distributed histogram which is one of th
 
 Plot() function gives 4 graphs including residuals vs leverage, residuals vs fitted, normal Q-Q and scale location. These could be explored in more detail to get a better insight into the relationship between the 2 variables. 
 
-4.  Select one or more additional predictors to add to your model and repeat steps 1-3. Is this model significantly better than the model with /metro/ as the only predictor?
+### 4.Select one or more additional predictors to add to your model and repeat steps 1-3. Is this model significantly better than the model with /metro/ as the only predictor?
 
 ```{r}
 model2 <- lm(energy ~ metro + area, data = states)
@@ -54,9 +54,13 @@ This plot shows a significant improvement in the accuracy of the model. The addi
 
 
 ## Exercise 2 - interactions and factors 
-1. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.
+Interactions allow us assess the extent to which the association  between one predictor and the outcome depends on a second predictor.
+For example: Does the association between expense and SAT scores depend on the median income in the state?
 
-2. Try adding region to the model. Are there significant differences across the four regions?
+
+### 1. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.
+
+### 2. Try adding region to the model. Are there significant differences across the four regions?
 
 ```{r}
 model3 <- lm(energy ~ metro*income, data = states)
