@@ -1,0 +1,76 @@
+---
+title: "Untitled"
+author: "Paddy"
+date: "2 June 2017"
+output: html_document
+---
+
+
+#Exercise 1
+Use the /states.rds/ data set. Fit a model predicting energy consumed
+per capita (energy) from the percentage of residents living in metropolitan areas (metro).
+
+1. Examine/plot the data before fitting the model
+2. Print and interpret the model `summary'
+3. `plot' the model to look for deviations from modeling assumptions
+
+```{r}
+library(readr)
+ states <- readRDS("C:/Users/Pat/Desktop/linear_regression/dataSets/states.rds")
+ View(states)
+ states.subset <- subset(states, select = c("energy", "metro"))
+ cor(states.subset)
+ plot(states.subset)
+```
+Unfortunately, the cor() function gave an "NA" for the correlation between both variables. Plotting the relationship between the variables shows there is not much correlation.
+
+We will build and explore the model.
+
+```{r}
+model1 <- lm(energy ~ metro, data = states)
+summary(model1)
+```
+After exploring the model, the metro variable can be seen to be slightly significant and the minus sign on the coefficient indicates that metro is inversely related to energy. 
+
+The R^2 value is quite low at only 0.1155 hence, the model would suggest that these 2 variables are not closely linked and more variables will need to be added to the model to improve the accuracy of the prediction. 
+
+```{r}
+hist(residuals(model1))
+plot(model1)
+```
+Plotting the residuals shows a normally distributed histogram which is one of the assumptions of linear regression.
+
+Plot() function gives 4 graphs including residuals vs leverage, residuals vs fitted, normal Q-Q and scale location. These could be explored in more detail to get a better insight into the relationship between the 2 variables. 
+
+4.  Select one or more additional predictors to add to your model and repeat steps 1-3. Is this model significantly better than the model with /metro/ as the only predictor?
+
+```{r}
+model2 <- lm(energy ~ metro + area, data = states)
+summary(model2)
+```
+This plot shows a significant improvement in the accuracy of the model. The additional variable "area" is shown to be significant in predicting energy consumption. The addition of area has improved the R2 value to 0.4951 which is a huge increase in the accuracy of the model. 
+
+
+#Exercise 2 - interactions and factors 
+1. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.
+
+2. Try adding region to the model. Are there significant differences across the four regions?
+
+```{r}
+model3 <- lm(energy ~ metro*income, data = states)
+summary(model3)
+```
+The addition of income as an interaction term has shown that there is a significant relationship between metro and income in assessing the energy consumption i.e. the association between the energy consuption and metro depends quite significantly on the income in the state. 
+
+```{r}
+model4 <- lm(energy ~ metro*income + region, data = states)
+summary(model4)
+```
+The addition of the region variable in the model was explored. The N. East region had a relatively significant impact on the energy consumption with the remaining regions having no significant relationship with the energy consumption.
+
+The addition of the region variable to the model increased the R^2 value from 0.2472 to 0.3345 which suggests that overall, region does have a significant relationship with the prediction of the energy consumption. 
+
+
+
+
+
