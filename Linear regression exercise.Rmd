@@ -4,9 +4,11 @@ author: "Paddy"
 date: "2 June 2017"
 output: html_document
 ---
+# Machine Learning - Linear Regression Exercise 
 
+The purpose of this exercise was to practice the learning from the linear regression section of the machine learning curriculum on Springboard. 
 
-#Exercise 1
+## Exercise 1
 Use the /states.rds/ data set. Fit a model predicting energy consumed
 per capita (energy) from the percentage of residents living in metropolitan areas (metro).
 
@@ -51,7 +53,7 @@ summary(model2)
 This plot shows a significant improvement in the accuracy of the model. The additional variable "area" is shown to be significant in predicting energy consumption. The addition of area has improved the R2 value to 0.4951 which is a huge increase in the accuracy of the model. 
 
 
-#Exercise 2 - interactions and factors 
+## Exercise 2 - interactions and factors 
 1. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.
 
 2. Try adding region to the model. Are there significant differences across the four regions?
