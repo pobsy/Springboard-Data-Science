@@ -1,0 +1,273 @@
+---
+title: "Untitled"
+author: "Paddy"
+date: "19 June 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Formatting
+***this should be added to the original formatting markdown file***
+
+
+First step of the Logistic Regression process is to do one more step of data wrangling. OHE is being used for several variables, hence, the original columns can be deleted as they will not be needed. The column "emp_title" can also be deleted as it is too vague and broad to narrow down into a suitable amount of observations for analysis.
+
+### Home Ownership
+```{r}
+lc3$home_ownership <- gsub('NONE', "OTHER", lc3$home_ownership)
+lc$home_ownership <- gsub('OWN', "MORTGAGE", lc$home_ownership)
+```
+
+### Emp Length
+Can determine the class of all columns. Emp length is still a character so let's change it to numeric.
+```{r}
+lapply(lc3, class)
+lc3$emp_length_yrs <- as.numeric(lc3$emp_length_yrs)
+```
+### Dates
+Need to be binned into quarters. This includes issue date and last_pymnt_d, last_credit_pull_d. This will be omitted for the moment and may be used at a later date.
+
+### Deleting columns
+Delete all columns that were used in OHE (lc3). Delete all columns that will not be necessary/ too messy to use.
+```{r}
+lc3[, c('term_mths', 'grade', 'emp_length_yrs', 'home_ownership', 'verification_status', 'loan_status', 'pymnt_plan', 'purpose', 'delinq_2yrs', 'inq_last_6mths', 'pub_rec', 'pub_rec_bankruptcies')] <- NULL
+
+lc3[, c("addr_state", "earliest_cr_line", "last_credit_pull_d", "last_pymnt_d" )]
+
+lc2[, c("X1", "grade", "emp_title", "purpose")] <- NULL
+
+```
+The dependend variable being used in this case is "is_bad", the variable which tells us whether or not the loan has defaulted. "1" means the loan has defaulted while "0" means the loan has been successfully paid off.
+
+
+
+
+
+## Alternative data set
+Using the data just before OHE was carried out will be easier to begin the model. Carry out formatting and then individually place variables in the model. 
+
+```{r}
+lc1 <- lc
+lc1$emp_length_yrs <- as.numeric(lc1$emp_length_yrs)
+lc1[, c("addr_state", "earliest_cr_line", "last_credit_pull_d", "last_pymnt_d", "X1", "emp_title")] <- NULL
+
+lc1$purpose <- gsub("car|home_improvement|house|wedding", "major purchase", lc1$purpose)
+lc1$purpose <- gsub("medical|moving|other|renewable_energy|vacation", "other", lc1$purpose)
+lc1$purpose <- gsub("credit_major purchased", "credit_card", lc1$purpose)
+table(lc1$purpose)
+```
+
+
+## Step 1 - Get the Baseline 
+Predict the most frequent outcome (i.e. default loan or complete loan) of all observations. This is done by counting the actual number of default loans vs the number of complete loans to give the accuracy of the dataset. 
+
+```{r}
+table(lc2$is_bad, sign(lc2$is_bad))
+```
+This produces the following table. The use of the sign function can derive a smarter baseline however in this case, both tables (actual results and smart baseline) derive the same accuracy of 84.88%.
+
+        0     1
+  0 36103     0
+  1     0  6432
+  
+
+## Step 2 - Split the data 
+Using CaTools package, split the data into 2 sections - test data and train data. The ratio for the divide will be 80/20 i.e. 80% of the dataset will be made up of train data "Train" and the remaining 20% will be test data "Test".
+
+```{r}
+library(caTools)
+split = sample.split(lc1$is_bad, SplitRatio = 0.80)
+Train = subset(lc1, split = TRUE)
+Test = subset(lc1, split = FALSE)
+```
+
+## Step 3 - Run logistic regression on the model
+
+
+```{r}
+ model3 <- glm(is_bad ~. -id -loan_status -issue_d, data = lc1, family = "binomial")
+summary(model3)
+```
+
+Model 3 gave several significant values. The next step is to take just the significant values and run the regression model again until all values in the model are significant. I've left fico_norm in as this is a significant variable.
+
+```{r}
+ model4 <- glm(is_bad ~ loan_amnt + term_mths + int_rate_percent + installment + grade + annual_inc + total_acc + last_fico_range_high + meet_cred_pol + fico_norm, data = lc1, family = "binomial")
+
+model5 <- glm(is_bad ~ loan_amnt + term_mths + int_rate_percent + grade + annual_inc + total_acc + last_fico_range_high + meet_cred_pol + fico_norm, data = lc1, family = "binomial")
+
+summary(model5)
+
+model6 <- glm(is_bad ~ loan_amnt + term_mths + purpose + int_rate_percent + grade + annual_inc + total_acc + last_fico_range_high + meet_cred_pol + fico_norm, data = lc1, family = "binomial")
+
+summary(model6)
+```
+After several iterations, model6 will be used for predicting on the Training data
+
+## Step 4 - Predicting on Training Data
+
+Run model6 on Train data which gives model7.
+
+
+
+```{r}
+predictTrain = predict(model7, type = "response")
+tapply(predictTrain, Train$is_bad, mean)
+table(Train$is_bad, predictTrain > 0.5)
+```
+For the tapply and table functions an error was returned:
+          "Error in tapply(predict, lc1$is_bad, mean) : 
+            arguments must have same length"
+            
+This is due to the exclusion of NA values in the model which renders less observations than when the predict function and hence the entire data set is used.
+
+This is combatted with the addition of "na.action = na.exclude" in the model.
+
+```{r}
+model9 <- glm(is_bad ~ loan_amnt + term_mths + purpose + int_rate_percent + grade + annual_inc + total_acc + last_fico_range_high + meet_cred_pol + fico_norm, data = Train, family = "binomial", na.action = na.exclude)
+
+predict1 = predict(model9, type = "response")
+tapply(predict1, Train$is_bad, mean)
+```
+The tapply function returns NA values. Instead, the confusion matrix returned from the table function using the predict1 will be used to intially analyse the model. This matrix allows for calculations to be made regarding the accuracy of the model.
+
+******Maybe include another bit about the confusion matrix and why its useful - what will it give me in terms of accuracy, sensitivity and specificity??****
+
+```{r}
+table(Train$is_bad, predict1 > 0.5)
+```
+                 FALSE  TRUE
+                0 34620  1457
+                1  3991  2438
+      
+          
+## Step 5 - Measuring the accuracy of the model
+From the table above, the accuracy of the model can be measured using various metrics.
+
+### Overall accuracy 
+Overall accuracy = (TN + TP)/N
+
+```{r}
+(34620+2438)/nrow(Train)
+
+```
+This gives an accuracy of 0.8711535.
+
+### Sensitivity 
+Sensitivity = TP/(TP+FN)
+
+```{r}
+2438/(2438+3991)
+```
+Sensitivity = 0.37922
+
+### Specificity
+Specificity = TN/(TN+FP)
+
+```{r}
+34620/(34620+1457)
+
+```
+Specificity = 0.9596142
+
+Comparing the accuracy of the model to the baseline model shows the model is 2.24% more accurate i.e. 
+Baseline accuracy = 84.88% 
+Model = 87.12%
+
+Hence, the calculations show that the model is more accurate than the baseline model which means that the model will derive less mistakes when predicting the outcome of the success of a loan.
+
+ 
+
+## AUC *****should come before the ROC*****
+****include bit from article in here describing what we are looking for****
+
+
+```{r}
+pred = prediction(predict1, Train$is_bad)
+as.numeric(performance(pred, "auc")@y.values)
+```
+
+This gives a value of 0.8917 - higher than our baseline but can still be improved.
+***include bit from article about how to improve this value***
+
+Investigating overall accuracy, sensivity, and specificity for different t values:
+*******table with all data as described in page 1 of notes*******
+
+The main priority in this case is keeping the number of FN cases as low as possible. FN means that the model predicted the loan was good while in reality, the loan was actaully bad. There will always be some percentage of loans where the loan is predicted good but is actually bad however, we can adjust the t value to ensure this value is kept as low as possible.
+
+Using t=0.3 gives a relatively low FN rate in comparison to other higher t-values however, the overall percentage accuracy is still relatively high (1% lower than t=0.5 and t=0.75) - hence, t=0.3 seems to be the most suitable value to use.
+
+
+
+
+## ROC Curve
+In the calculations above, the t value of 0.5 was used. In this section, the ROC curve will be graphed which will allow for the t value to be investigated further. When choosing the t value, there is a trade off between sensitivity and specificity calculations. Hence, what is more detrimental to the success of Lending Club from the model - the cost of failing to detect positives or the cost of raising false alarms. 
+
+Graphing the curve:
+
+```{r}
+ROCRpred = prediction(predict2, Train$is_bad)
+ROCRperf = performance(ROCRpred, "tpr", "fpr")
+plot(ROCRperf)
+plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0.1, 0.1), text.adj = c(-0.2, 1.7))
+```
+*****remember to include the graph - see milestone report on how to do this*****
+
+
+Looking at the graph (with colors)
+From article - "We see that probably the cutoff value of 0.35 is giving us a better tradeoff between sensitivity and specificity. Let's use this threshold to see how our model performs in the test data set."
+Looking at the curve, can see there are marginal gains in terms of specificity after the 0.4-0.3 mark.
+
+After investigating different values for the threshold, overall, the most suitable is 0.35 so we'll use this to determine how well the model works using test data.
+
+
+
+## Testing the Model 
+
+Computing the out-of-sample metrics on the Test dataset:
+
+```{r}
+predictTest = predict(model9, type = "response", newdata = Test)
+table(Test$is_bad, predictTest > 0.3)
+```
+
+       
+    FALSE  TRUE
+  0 32875  3202
+  1  2581  3848
+  
+Overall accuracy = (TN + TP)/N
+    = (32875+3848)/nrow(Test)
+    = 0.8632784
+
+Sensitivity = TP/(TP+FN)
+    = 3848/(3848+2581)
+    = 0.5985379
+
+Specificity = TN/(TN+FP)
+    = 32875/(32875+3202)
+    = 0.91124
+
+At a cutoff of 0.3, the sensitivity is massively improved from 0.38 in the original model to 0.59 in the revised model. This does not come with a massive trade off in overall model accuracy. The overall accuracy of the revised model on the Test set is 0.863 which is only slightly off the accuracy of the original model of 0.8711. Despite this slight descrease, the revised model is still more accurate than the baseline which was 0.8488. 
+
+
+*****this section may not be necessary*****
+Lets evaluate the model further by looking at the AUC:
+
+```{r}
+ROCRpredTest = prediction(predictTest, Test$is_bad)
+as.numeric(performance(ROCRpredTest, "auc")@y.values)
+```
+This gives an AUC value on the Test dataset of 0.89174.
+
+
+"At a cutoff of 0.35, the sensitivity sees a drastic improvement from 33% in the original model to 52%. And the Overall Accuracy of the model is also not compromised much as it is still considerably better at 71% than the baseline accuracy of 69%."
+
+
+
+
+
+
+
