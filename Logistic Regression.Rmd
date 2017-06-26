@@ -20,8 +20,13 @@ I will be using the "lc_formatted" dataset as described in the Data Wrangling se
 
 Import the data set and rename to lc1 (for ease of use):
 
-```{r}
+```{r eval =FALSE}
+library(tidyr)
+library(dplyr)
+library(readr)
+
 lc_formatted <- read_csv("~/Springboard/Capstone project/New folder/lc_formatted.csv")
+
 lc1 = lc_formatted
 ```
 
