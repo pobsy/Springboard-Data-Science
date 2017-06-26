@@ -163,7 +163,9 @@ Hence, the calculations show that the model is more accurate than the baseline m
 
 Want to go a step further with the analysis and investigate the threshold value (t) and the impact it can have on the accuracy and effectiveness of the model.
 
-## AUC
+## Step 6 Analysis
+
+### AUC
 In order to investigate the t value further, a good place to start is to determine the area under the curve (AUC) of the ROC curve for the model. The resulting AUC value is an indicator of the discrimination ability of the model. The value ranges from 0.5 to 1 with a higher value representing a better discrimination ability and hence a better predictor. 
 
 
@@ -203,13 +205,35 @@ rownames(tvalue) <- c("sensitivity", "specificity", "accuracy")
 tvalue <- as.table(tvalue)
 tvalue
 ```
+    FALSE  TRUE
+  0 32877  3200
+  1  2585  3844
+   
+    FALSE  TRUE
+  0 33928  2149
+  1  3327  3102
+   
+    FALSE  TRUE
+  0 34620  1457
+  1  3988  2441
+   
+    FALSE  TRUE
+  0 35772   305
+  1  5581   848
+   
+   
+             t=0.3  t=0.4  t=0.5 t=0.75
+sensitivity 0.5980 0.1320 0.9596 0.8700
+specificity 0.4830 0.9110 0.9920 0.8710
+accuracy    0.3797 0.9410 0.8630 0.8610
+
 
 The main priority in this case is keeping the number of FN cases as low as possible. FN means that the model predicted the loan was good while in reality, the loan was actaully bad. There will always be some percentage of loans where the loan is predicted good but is actually bad however, we can adjust the t value to ensure this value is kept as low as possible.
 
 Using t=0.3 gives a relatively low FN rate in comparison to other higher t-values however, the overall percentage accuracy is still relatively high (1% lower than t=0.5 and t=0.75) - hence, t=0.3 seems to be the most suitable value to use. This can be confirmed by visually inspecting the ROC curve.
 
 
-## ROC Curve
+### ROC Curve
 In the calculations above, the t value of 0.5 was used. In this section, the ROC curve will be graphed which will allow for the t value to be investigated further. When choosing the t value, there is a trade off between sensitivity and specificity calculations. Hence, what is more detrimental to the success of Lending Club from the model - the cost of failing to detect positives or the cost of raising false alarms. 
 
 Graphing the curve:
@@ -218,21 +242,20 @@ Graphing the curve:
 ROCRpred = prediction(predict1, Train$is_bad)
 ROCRperf = performance(ROCRpred, "tpr", "fpr")
 p1 <- plot(ROCRperf)
+
+png("ROC_curve.png")
 p2 <- plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj = c(-0.2, 1.7))
 p2
+dev.off()
 ```
-*****remember to include the graph - see milestone report on how to do this*****
+*****remember to include the graph*****
 
-#more on this.
-#Looking at the graph
-#From article - "We see that probably the cutoff value of 0.35 is giving us a better tradeoff between sensitivity #and specificity. Let's use this threshold to see how our model performs in the test data set."
-#Looking at the curve, can see there are marginal gains in terms of specificity after the 0.4-0.3 mark.
 
 After investigating different values for the threshold and visually inspecting the ROC curve, overall the most suitable t-value is 0.30 so this will be used to determine how well the model works using test data.
 
 
 
-## Testing the Model 
+## Step 7 - Testing the Model 
 
 Computing the out-of-sample metrics on the Test dataset:
 
@@ -269,11 +292,11 @@ lc1$predicted.risk <- predict(model7, type = "response")
 
 
 
-##Using the Model
+## Using the Model
 
 ### Important variables
 Using the log of the coefficients, can see which are the most important factors to consider when investigating the success of a loan. For investors, these factors can then be weighted to determine the highest rate of return on an investment portfolio.
-***read Kaggle articles**
+
 
 ### Beating Lending Club's model
 For an investor, the rate of return on an investment is derived from the interest rate. This is derived from a series of factors such as the FICO score, employment length, etc. 
