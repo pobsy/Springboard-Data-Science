@@ -283,3 +283,4 @@ Finish this section of linear regression by adding the default rates to each obs
 
 ```{r}
 lc1$predicted.risk <- predict(model7, type = "response")
+
