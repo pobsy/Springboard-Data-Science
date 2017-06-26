@@ -2,14 +2,16 @@
 title: "Untitled"
 author: "Paddy"
 date: "19 June 2017"
-output: html_document: keep_md: true
+output: 
+        html_document:
+          keep_md: true
 
 ---
 
 
 ```{r, echo = FALSE}
 knitr::opts_chunk$set(
-  fig.path = "README_figs/README-"
+  fig.path = "README_figs_lreg/README-"
 )
 ```
 
@@ -212,6 +214,7 @@ ROCRpred = prediction(predict1, Train$is_bad)
 ROCRperf = performance(ROCRpred, "tpr", "fpr")
 p1 <- plot(ROCRperf)
 p2 <- plot(ROCRperf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj = c(-0.2, 1.7))
+p2
 ```
 *****remember to include the graph - see milestone report on how to do this*****
 
